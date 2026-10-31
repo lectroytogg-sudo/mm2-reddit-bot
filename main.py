@@ -1,31 +1,31 @@
-import time
 import os
-import praw
+import discord
+from discord.ext import commands
 
-# قراءة بيانات الاعتماد الخاصة بريديت من إعدادات الأمان في الاستضافة
-reddit = praw.Reddit(
-    client_id=os.environ.get("REDDIT_CLIENT_ID"),
-    client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
-    user_agent="MM2BotManager v1.0",
-    username=os.environ.get("REDDIT_USERNAME"),
-    password=os.environ.get("REDDIT_PASSWORD")
-)
+# إعدادات البوت وصلاحياته الأساسية
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-print("[SUCCESS] Connected to Reddit Successfully! Bot is running 24/7...")
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user.name} (Discord Bot is Online!)")
 
-# حلقة تكرارية لضمان استمرار البوت دائماً (Uptime Loop)
-while True:
-    try:
-        # فحص الرسائل الخاصة الواردة أو التحديثات على ريديت
-        print("[CHECKING] Scanning Reddit inbox for commands...")
-        
-        # يمكنك هنا استقبال الأوامر البرمجية ومعالجتها
-        for message in reddit.inbox.unread(limit=5):
-            print(f"Received command from u/{message.author}: {message.body}")
-            message.mark_read()
-            
-    except Exception as e:
-        print(f"[ERROR] An error occurred: {e}")
+# أمر لجلب الأخبار وإرسالها (اكتب !news في السيرفر أو !news dm للخاص)
+@bot.command(name="news")
+async def send_news(ctx, destination: str = "server"):
+    news_content = "📰 **آخر الأخبار والتحديثات:**\n- تم تشغيل نظام البوت بنجاح.\n- جارٍ مراقبة الأنظمة واستقرار العمل."
     
-    # الانتظار لمدة 60 ثانية قبل الفحص القادم
-    time.sleep(60)
+    if destination.lower() == "dm":
+        try:
+            # إرسال الأخبار على الرسائل الخاصة (DM) لك مباشرة
+            await ctx.author.send(news_content)
+            await ctx.send("📩 تم إرسال الأخبار إلى رسائلك الخاصة (DM)!")
+        except discord.Forbidden:
+            await ctx.send("❌ عذراً، لا يمكنني إرسال رسالة خاصة لك، تأكد من فتح الرسائل الخاصة من إعدادات السيرفر.")
+    else:
+        # إرسال الأخبار في نفس شات السيرفر
+        await ctx.send(news_content)
+
+# تشغيل البوت باستخدام التوكن المباشر
+bot.run("MTQyOTc5MzM3MzQ2Nzk3MTY5NQ.GllCU6.kjGg0c_HMUjUSSS9JQWtplc5VeZOR43IzqrVic")
